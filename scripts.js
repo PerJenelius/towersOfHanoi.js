@@ -9,6 +9,8 @@ const app = {
     stickRadius: 8,
     activeStick: -1,
     ringCount: 5,
+    ringMin: 3,
+    ringMax: 20,
     ringRadius: 5,
     rings: [],
     quarter: 0.5 * Math.PI,
@@ -37,9 +39,11 @@ const updatePage = () => {
     clearCanvas();
     drawFrame();
     drawRings();
+    checkForWin();
 }
 
 const setupRings = () => {
+    app.rings = [];
     let left = [];
     for (let i = app.ringCount; i > 0 ; i--) {
         left.push(i);
@@ -49,6 +53,27 @@ const setupRings = () => {
     for (let i = 1; i < app.stickCount; i++) {
         app.rings.push([]);
     }
+
+    document.getElementById('textSeg').value = app.ringCount;
+}
+
+const changeRingCount = (input) => {
+    let value = 0;
+    switch (input) {
+        case 'mins': value = app.ringCount - 1; break;
+        case 'plus': value = app.ringCount + 1; break;
+        case 'text': value = parseInt(document.getElementById('textSeg').value); break;
+    }
+    app.ringCount = typeof(value) == 'number' && value >= app.ringMin && value <= app.ringMax ? value : app.ringCount;
+    setupRings();
+    updatePage();
+}
+
+const checkForWin = () => {
+    document.getElementsByTagName('body')[0].style.backgroundColor = 
+        app.rings[app.stickCount - 1].length === app.ringCount ?
+        body.style.backgroundColor = 'lightgreen' :
+        body.style.backgroundColor = '#e5e5e5';
 }
 
 const clearCanvas = () => {
@@ -153,6 +178,9 @@ const drawRings = () => {
             const ringIndex = app.ringCount - ringSize;
             const colorIndex = ringIndex % app.colors.length;
             const offset = app.activeStick === i && j === app.rings[i].length - 1 ? j + 1 : j;
+
+
+
             app.ctx.fillStyle = app.colors[colorIndex];
             app.ctx.beginPath();
             app.ctx.arc((position - baseWidth + (ringIndex * widthInc) + app.ringRadius), (baseHeight - (offset + 1) * ringHeight + app.ringRadius), app.ringRadius, Math.PI, 1.5 * Math.PI);
