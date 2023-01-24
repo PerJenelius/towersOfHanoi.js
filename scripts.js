@@ -55,6 +55,7 @@ const setupRings = () => {
     }
 
     document.getElementById('textSeg').value = app.ringCount;
+    app.activeStick = -1;
 }
 
 const changeRingCount = (input) => {
@@ -62,7 +63,6 @@ const changeRingCount = (input) => {
     switch (input) {
         case 'mins': value = app.ringCount - 1; break;
         case 'plus': value = app.ringCount + 1; break;
-        case 'text': value = parseInt(document.getElementById('textSeg').value); break;
     }
     app.ringCount = typeof(value) == 'number' && value >= app.ringMin && value <= app.ringMax ? value : app.ringCount;
     setupRings();
@@ -71,9 +71,7 @@ const changeRingCount = (input) => {
 
 const checkForWin = () => {
     document.getElementsByTagName('body')[0].style.backgroundColor = 
-        app.rings[app.stickCount - 1].length === app.ringCount ?
-        body.style.backgroundColor = 'lightgreen' :
-        body.style.backgroundColor = '#e5e5e5';
+        app.rings[app.stickCount - 1].length === app.ringCount ? 'lightgreen' : '#e5e5e5';
 }
 
 const clearCanvas = () => {
