@@ -70,8 +70,24 @@ const changeRingCount = (input) => {
 }
 
 const checkForWin = () => {
-    document.getElementsByTagName('body')[0].style.backgroundColor = 
-        app.rings[app.stickCount - 1].length === app.ringCount ? 'lightgreen' : '#e5e5e5';
+    let win = false;
+    for (let i = 1; i < app.stickCount; i++) {
+        if (app.rings[i].length === app.ringCount) {
+            win = true;
+            break;
+        }
+    }
+    win ? celebrateWin() : resetWin();
+}
+
+const celebrateWin = () => {
+    document.getElementsByTagName('body')[0].style.backgroundColor = 'lightgreen';
+    document.querySelector('.congratulations').classList.remove('display-none');
+}
+
+const resetWin = () => {
+    document.getElementsByTagName('body')[0].style.backgroundColor = '#e5e5e5';
+    document.querySelector('.congratulations').classList.add('display-none');
 }
 
 const clearCanvas = () => {
