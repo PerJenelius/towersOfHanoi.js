@@ -1,8 +1,6 @@
 'use strict';
 
 const app = {
-    canvas: document.getElementById('canvas'),
-    ctx: document.getElementById('canvas').getContext('2d'),
     width: 815,
     height: 500,
     stickCount: 3,
@@ -35,6 +33,11 @@ const main = () => {
     listenForInput();
 }
 
+const listenForInput = () => {
+    listenForClicks();
+    listenForKeyStrokes();
+}
+
 const updatePage = () => {
     clearCanvas();
     drawFrame();
@@ -44,29 +47,28 @@ const updatePage = () => {
 
 const setupRings = () => {
     app.rings = [];
-    let left = [];
+    const left = [];
     for (let i = app.ringCount; i > 0 ; i--) {
         left.push(i);
     }
     app.rings.push(left);
-
     for (let i = 1; i < app.stickCount; i++) {
         app.rings.push([]);
     }
-
-    document.getElementById('textSeg').value = app.ringCount;
+    document.querySelector('#textSeg').value = app.ringCount;
     app.activeStick = -1;
 }
 
-const changeRingCount = (input) => {
-    let value = 0;
-    switch (input) {
-        case 'mins': value = app.ringCount - 1; break;
-        case 'plus': value = app.ringCount + 1; break;
+const clearCanvas = () => {
+    document.querySelector('#canvas').width = app.width;
+    document.querySelector('#canvas').height = app.height;
+}
+
+const drawFrame = () => {
+    drawBase();
+    for (let i = 0; i < app.stickCount; i++) {
+        drawStick(Math.round((app.width / (2 * app.stickCount)) * ((i + 1) * 2 - 1)));
     }
-    app.ringCount = typeof(value) == 'number' && value >= app.ringMin && value <= app.ringMax ? value : app.ringCount;
-    setupRings();
-    updatePage();
 }
 
 const checkForWin = () => {
@@ -77,31 +79,11 @@ const checkForWin = () => {
             break;
         }
     }
-    win ? celebrateWin() : resetWin();
-}
-
-const celebrateWin = () => {
-    document.getElementsByTagName('body')[0].style.backgroundColor = 'lightgreen';
-    document.querySelector('.congratulations').classList.remove('display-none');
-}
-
-const resetWin = () => {
-    document.getElementsByTagName('body')[0].style.backgroundColor = '#e5e5e5';
-    document.querySelector('.congratulations').classList.add('display-none');
-}
-
-const clearCanvas = () => {
-    app.canvas.width = app.width;
-    app.canvas.height = app.height;
-}
-
-const listenForInput = () => {
-    listenForClicks();
-    listenForKeyStrokes();
+    document.querySelector('.congratulations').classList.toggle('display-none', !win);
 }
 
 const listenForClicks = () => {
-    app.canvas.addEventListener("click", (e) => {
+    document.querySelector('#canvas').addEventListener("click", (e) => {
         updateActiveStick(getMousePos(e));
     }, false);
 }
@@ -114,11 +96,23 @@ const listenForKeyStrokes = () => {
     });
 }
 
+const changeRingCount = (input) => {
+    let value = 0;
+    switch (input) {
+        case 'mins': value = app.ringCount - 1; break;
+        case 'plus': value = app.ringCount + 1; break;
+    }
+    app.ringCount = typeof(value) === 'number' && value >= app.ringMin && value <= app.ringMax ? 
+        value : 
+        app.ringCount;
+    setupRings();
+    updatePage();
+}
+
 const getMousePos = (e) => {
-    const rect = app.canvas.getBoundingClientRect();
+    const rect = document.querySelector('#canvas').getBoundingClientRect();
     const left = e.clientX - rect.left;
-    const stickIndex = Math.floor(left / (app.width / app.stickCount));
-    return stickIndex;
+    return Math.floor(left / (app.width / app.stickCount));
 }
 
 const updateActiveStick = (mousePos) => {
@@ -134,13 +128,11 @@ const updateActiveStick = (mousePos) => {
 
 const readyRing = (stick) => {
     app.activeStick = stick;
-    
 }
 
 const moveRing = (toStick) => {
     const moveRing = app.rings[app.activeStick].at(-1);
     const targetRing = app.rings[toStick].length > 0 ? app.rings[toStick].at(-1) : app.ringCount + 1;
-
     if (moveRing < targetRing) {
         const ring = app.rings[app.activeStick].pop();
         app.rings[toStick].push(ring);
@@ -148,60 +140,50 @@ const moveRing = (toStick) => {
     }
 }
 
-const drawFrame = () => {
-    drawBase();
-
-    for (let i = 0; i < app.stickCount; i++) {
-        drawStick(Math.round((app.width / (2 * app.stickCount)) * ((i + 1) * 2 - 1)));
-    }
-}
-
 const drawBase = () => {
-    app.ctx.fillStyle = app.baseColor;
-    app.ctx.beginPath();
-    app.ctx.arc((app.stickRadius), (app.height - app.stickness + app.stickRadius), app.stickRadius, (2 * app.quarter), (3 * app.quarter));
-    app.ctx.arc((app.width - app.stickRadius), (app.height - app.stickness + app.stickRadius), app.stickRadius, (3 * app.quarter), 0);
-    app.ctx.arc((app.width - app.stickRadius), (app.height - app.stickRadius), app.stickRadius, 0, (1 * app.quarter));
-    app.ctx.arc((app.stickRadius), (app.height - app.stickRadius), app.stickRadius, (app.quarter), (2 * app.quarter));
-    app.ctx.fill();
+    const ctx = document.querySelector('#canvas').getContext('2d');
+    ctx.fillStyle = app.baseColor;
+    ctx.beginPath();
+    ctx.arc((app.stickRadius), (app.height - app.stickness + app.stickRadius), app.stickRadius, (2 * app.quarter), (3 * app.quarter));
+    ctx.arc((app.width - app.stickRadius), (app.height - app.stickness + app.stickRadius), app.stickRadius, (3 * app.quarter), 0);
+    ctx.arc((app.width - app.stickRadius), (app.height - app.stickRadius), app.stickRadius, 0, (1 * app.quarter));
+    ctx.arc((app.stickRadius), (app.height - app.stickRadius), app.stickRadius, (app.quarter), (2 * app.quarter));
+    ctx.fill();
 }
 
 const drawStick = (position) => {
-    app.ctx.fillStyle = app.stickColor;
-    app.ctx.beginPath();
-    app.ctx.moveTo((position - app.stickness / 2), (app.height - app.stickness));
-    app.ctx.arc((position - app.stickness / 2 + app.stickRadius), (app.height / 6 + app.stickRadius), app.stickRadius, (2 * app.quarter), (3 * app.quarter));
-    app.ctx.arc((position + app.stickness / 2 - app.stickRadius), (app.height / 6 + app.stickRadius), app.stickRadius, (3 * app.quarter), 0);
-    app.ctx.lineTo((position + app.stickness / 2), (app.height - app.stickness));
-    app.ctx.fill();
+    const ctx = document.querySelector('#canvas').getContext('2d');
+    ctx.fillStyle = app.stickColor;
+    ctx.beginPath();
+    ctx.moveTo((position - app.stickness / 2), (app.height - app.stickness));
+    ctx.arc((position - app.stickness / 2 + app.stickRadius), (app.height / 6 + app.stickRadius), app.stickRadius, (2 * app.quarter), (3 * app.quarter));
+    ctx.arc((position + app.stickness / 2 - app.stickRadius), (app.height / 6 + app.stickRadius), app.stickRadius, (3 * app.quarter), 0);
+    ctx.lineTo((position + app.stickness / 2), (app.height - app.stickness));
+    ctx.fill();
 }
 
 const drawRings = () => {
+    const ctx = document.querySelector('#canvas').getContext('2d');
     const summit = Math.round(app.heightRatio * (app.height- app.stickness));
     const baseHeight = (app.height - app.stickness);
     const ringHeight = (app.height - app.stickness - summit) / app.ringCount;
     const baseWidth = Math.round(app.width / (app.stickCount) - app.stickness) / 2;
     const topWidth = Math.round(app.heightRatio * baseWidth);
     const widthInc = Math.round((baseWidth - topWidth) / app.ringCount);
-
     for (let i = 0; i < app.stickCount; i++) {
         const position = Math.round((app.width / (2 * app.stickCount)) + i * (app.width / app.stickCount));
-
         for (let j = 0; j < app.rings[i].length; j++) {
             const ringSize = app.rings[i][j];
             const ringIndex = app.ringCount - ringSize;
             const colorIndex = ringIndex % app.colors.length;
             const offset = app.activeStick === i && j === app.rings[i].length - 1 ? j + 1 : j;
-
-
-
-            app.ctx.fillStyle = app.colors[colorIndex];
-            app.ctx.beginPath();
-            app.ctx.arc((position - baseWidth + (ringIndex * widthInc) + app.ringRadius), (baseHeight - (offset + 1) * ringHeight + app.ringRadius), app.ringRadius, Math.PI, 1.5 * Math.PI);
-            app.ctx.arc((position + baseWidth - (ringIndex * widthInc) - app.ringRadius), (baseHeight - (offset + 1) * ringHeight + app.ringRadius), app.ringRadius, 1.5 * Math.PI, 0);
-            app.ctx.arc((position + baseWidth - (ringIndex * widthInc) - app.ringRadius), (app.height - app.stickness - offset * ringHeight - app.ringRadius), app.ringRadius, 2 * Math.PI, 0.5 * Math.PI);
-            app.ctx.arc((position - baseWidth + (ringIndex * widthInc) + app.ringRadius), (baseHeight - offset * ringHeight - app.ringRadius), app.ringRadius, 0.5 * Math.PI, Math.PI);
-            app.ctx.fill();
+            ctx.fillStyle = app.colors[colorIndex];
+            ctx.beginPath();
+            ctx.arc((position - baseWidth + (ringIndex * widthInc) + app.ringRadius), (baseHeight - (offset + 1) * ringHeight + app.ringRadius), app.ringRadius, Math.PI, 1.5 * Math.PI);
+            ctx.arc((position + baseWidth - (ringIndex * widthInc) - app.ringRadius), (baseHeight - (offset + 1) * ringHeight + app.ringRadius), app.ringRadius, 1.5 * Math.PI, 0);
+            ctx.arc((position + baseWidth - (ringIndex * widthInc) - app.ringRadius), (app.height - app.stickness - offset * ringHeight - app.ringRadius), app.ringRadius, 2 * Math.PI, 0.5 * Math.PI);
+            ctx.arc((position - baseWidth + (ringIndex * widthInc) + app.ringRadius), (baseHeight - offset * ringHeight - app.ringRadius), app.ringRadius, 0.5 * Math.PI, Math.PI);
+            ctx.fill();
         }
     }
 }
